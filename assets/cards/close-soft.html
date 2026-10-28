@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- Calm light outro. Pair with title-soft. -->
+<html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}html,body{margin:0;width:1920px;height:1080px;overflow:hidden}
+body{background:{{bg}};font-family:Georgia,'Times New Roman',serif;
+ display:flex;align-items:center;justify-content:center}
+.card{background:#FFFEFB;width:1500px;min-height:660px;border-radius:28px;
+ padding:84px 100px 76px;position:relative;
+ display:flex;flex-direction:column;justify-content:center;
+ box-shadow:0 32px 90px rgba(0,0,0,.13);
+ animation:rise 1s cubic-bezier(.16,1,.3,1) .1s both}
+.kicker{font-family:'Ubuntu Sans','DejaVu Sans',system-ui,sans-serif;
+ font-size:22px;font-weight:700;color:{{accent1}};margin-bottom:22px;
+ opacity:0;animation:rise .8s cubic-bezier(.16,1,.3,1) .28s both}
+.big{font-size:44px;color:{{ink}};line-height:1.5;margin:0;max-width:1250px;text-wrap:balance;
+ opacity:0;animation:rise .8s cubic-bezier(.16,1,.3,1) .42s both}
+.big b{color:{{hi}};font-weight:700}
+.big i{color:{{accent1}};font-style:normal}
+.links{font-family:'Ubuntu Sans','DejaVu Sans',system-ui,sans-serif;
+ margin-top:46px;font-size:26px;color:{{muted}};
+ border-left:4px solid {{accent2}};padding-left:22px;
+ opacity:0;animation:rise .8s cubic-bezier(.16,1,.3,1) .62s both}
+.foot{font-family:'Ubuntu Sans','DejaVu Sans',system-ui,sans-serif;
+ margin-top:14px;font-size:22px;color:{{faint}};padding-left:26px;
+ opacity:0;animation:rise .8s cubic-bezier(.16,1,.3,1) .78s both}
+.accent{position:absolute;left:100px;bottom:48px;width:170px;height:8px;border-radius:4px;
+ background:linear-gradient(90deg,{{accent1}},{{accent2}} 60%,{{accent3}});
+ opacity:0;animation:rise .8s cubic-bezier(.16,1,.3,1) .9s both}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+</style></head><body>
+<div class="card">
+<div class="kicker">{{name}}</div>
+<div class="big">{{headline}}</div>
+<div class="links">{{links}}</div>
+<div class="foot">{{footnote}}</div>
+<div class="accent"></div>
+</div></body></html>

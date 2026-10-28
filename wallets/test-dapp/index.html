@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wallet smoke test</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f7f4ef; color: #111318;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { width: min(920px, 92vw); padding: 48px 0; }
+  h1 { font-size: 40px; letter-spacing: -.03em; margin: 0 0 8px; }
+  p.lede { color: #6b7280; margin: 0 0 32px; font-size: 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card {
+    background: #fffefb; border: 1px solid #e7e1d8; border-radius: 18px;
+    padding: 24px; box-shadow: 0 12px 34px rgba(17,19,24,.07);
+  }
+  h2 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #6b7280; font-size: 14px; margin: 0 0 18px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    appearance: none; border: 0; border-radius: 10px; padding: 11px 16px;
+    font: inherit; font-weight: 650; cursor: pointer; background: #111318; color: #fff;
+  }
+  button.secondary { background: #fff3ed; color: #c2410c; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .out {
+    margin-top: 18px; padding: 14px; border-radius: 10px; background: #f7f4ef;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+    line-height: 1.5; white-space: pre-wrap; word-break: break-all; min-height: 74px;
+  }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px;
+    background: #fff3ed; color: #c2410c; font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Wallet smoke test</h1>
+  <p class="lede">Connect and sign a harmless message with the local Playwright profile.
+    No transaction is broadcast.</p>
+  <div class="grid">
+    <section class="card">
+      <h2>EVM <span class="badge">MetaMask</span></h2>
+      <p class="sub">Ethereum / Base / any EVM testnet</p>
+      <div class="row">
+        <button id="evm-connect">Connect</button>
+        <button id="evm-sign" class="secondary" disabled>Sign message</button>
+        <button id="evm-tx" class="secondary" disabled>Send 0 ETH (test)</button>
+      </div>
+      <div id="evm-out" class="out">Not connected.</div>
+    </section>
+    <section class="card">
+      <h2>Solana <span class="badge">optional</span></h2>
+      <p class="sub">MetaMask Solana uses Wallet Standard / MetaMask Connect.
+        The Phantom check below is legacy and optional.</p>
+      <div class="row">
+        <button id="sol-connect">Connect</button>
+        <button id="sol-sign" class="secondary" disabled>Sign message</button>
+      </div>
+      <div id="sol-out" class="out">Not connected.</div>
+    </section>
+  </div>
+</main>
+<script>
+const evmOut = document.getElementById('evm-out');
+const solOut = document.getElementById('sol-out');
+const evmSign = document.getElementById('evm-sign');
+const evmTx = document.getElementById('evm-tx');
+const solSign = document.getElementById('sol-sign');
+let evmAccount = null;
+let solPublicKey = null;
+
+const log = (el, text) => { el.textContent = text; };
+
+document.getElementById('evm-connect').addEventListener('click', async () => {
+  try {
+    if (!window.ethereum) throw new Error('window.ethereum not found — is MetaMask loaded?');
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    evmAccount = accounts[0];
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    log(evmOut, 'Connected\n' + evmAccount + '\nchain ' + parseInt(chainId, 16));
+    evmSign.disabled = false;
+    evmTx.disabled = false;
+    window.__EVM_CONNECTED__ = true;
+  } catch (e) {
+    log(evmOut, 'Error: ' + (e.message || e));
+  }
+});
+
+evmTx.addEventListener('click', async () => {
+  try {
+    if (!evmAccount) throw new Error('Connect first');
+    const hash = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{ from: evmAccount, to: evmAccount, value: '0x0' }],
+    });
+    log(evmOut, 'Connected\n' + evmAccount + '\n\nTransaction\n' + hash);
+    window.__EVM_TX__ = hash;
+  } catch (e) {
+    log(evmOut, 'Error: ' + (e.message || e));
+  }
+});
+
+evmSign.addEventListener('click', async () => {
+  try {
+    const message = 'open-video-demo wallet smoke test\n' + new Date().toISOString();
+    const sig = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [message, evmAccount],
+    });
+    log(evmOut, 'Connected\n' + evmAccount + '\n\nSignature\n' + sig);
+    window.__EVM_SIGNED__ = true;
+  } catch (e) {
+    log(evmOut, 'Error: ' + (e.message || e));
+  }
+});
+
+function solanaProvider() {
+  return (window.phantom && window.phantom.solana) || window.solana || null;
+}
+
+document.getElementById('sol-connect').addEventListener('click', async () => {
+  try {
+    const provider = solanaProvider();
+    if (!provider) throw new Error('Solana provider not found — is Phantom loaded?');
+    const res = await provider.connect();
+    solPublicKey = (res && res.publicKey) || provider.publicKey;
+    log(solOut, 'Connected\n' + solPublicKey.toString());
+    solSign.disabled = false;
+    window.__SOL_CONNECTED__ = true;
+  } catch (e) {
+    log(solOut, 'Error: ' + (e.message || e));
+  }
+});
+
+solSign.addEventListener('click', async () => {
+  try {
+    const provider = solanaProvider();
+    const message = 'open-video-demo wallet smoke test\n' + new Date().toISOString();
+    const encoded = new TextEncoder().encode(message);
+    const res = await provider.signMessage(encoded, 'utf8');
+    const sig = res.signature || res;
+    log(solOut, 'Connected\n' + solPublicKey.toString() + '\n\nSignature\n' +
+      Array.from(sig).map(b => b.toString(16).padStart(2, '0')).join(''));
+    window.__SOL_SIGNED__ = true;
+  } catch (e) {
+    log(solOut, 'Error: ' + (e.message || e));
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Acme Cloud</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0d14; --panel:#111827; --line:#1f2a3a; --text:#e6ebf4;
+    --dim:#8b96ab; --green:#34d399; --cyan:#22d3ee; --violet:#a78bfa;
+  }
+  html{scroll-behavior:auto}
+  body{width:1280px;margin:0 auto;background:var(--bg);color:var(--text);
+    font-family:'Ubuntu Sans','DejaVu Sans',system-ui,sans-serif}
+  section{padding:64px 72px}
+
+  .top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:36px;
+    padding:26px 72px;background:rgba(10,13,20,.92);border-bottom:1px solid var(--line);
+    backdrop-filter:blur(8px)}
+  .logo{font-size:26px;font-weight:800;letter-spacing:1px;
+    background:linear-gradient(90deg,var(--green),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .top nav{display:flex;gap:26px;color:var(--dim);font-size:17px}
+  .top .spacer{flex:1}
+  #search{width:300px;padding:12px 16px;border-radius:10px;font-size:16px;
+    border:1px solid var(--line);background:#0f1521;color:var(--text);outline:none}
+  #search:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(52,211,153,.15)}
+
+  .hero{padding-top:88px}
+  h1{font-size:76px;line-height:1.05;font-weight:800;letter-spacing:-1px}
+  h1 em{font-style:normal;background:linear-gradient(90deg,var(--green),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{margin-top:22px;font-size:22px;color:var(--dim);max-width:760px;line-height:1.6}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:56px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:26px 24px;opacity:0;animation:up .7s cubic-bezier(.2,.9,.25,1) forwards}
+  .stat:nth-child(1){animation-delay:.1s}.stat:nth-child(2){animation-delay:.2s}
+  .stat:nth-child(3){animation-delay:.3s}.stat:nth-child(4){animation-delay:.4s}
+  .stat .k{font-size:15px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px}
+  .stat .v{font-size:42px;font-weight:800;margin-top:10px}
+  .stat .d{font-size:15px;color:var(--green);margin-top:8px}
+  @keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+  h2{font-size:34px;font-weight:700}
+  .runs table{width:100%;margin-top:30px;border-collapse:collapse;font-size:17px}
+  .runs th{text-align:left;color:var(--dim);font-weight:600;font-size:14px;
+    text-transform:uppercase;letter-spacing:1.1px;padding:0 18px 14px}
+  .runs td{padding:18px;border-top:1px solid var(--line);color:var(--text)}
+  .runs tr:hover td{background:#131b2a}
+  .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:14px;font-weight:600}
+  .ok{background:rgba(52,211,153,.14);color:var(--green)}
+  .run{background:rgba(34,211,238,.14);color:var(--cyan)}
+  .fail{background:rgba(248,113,113,.14);color:#f87171}
+
+  .activity{display:grid;grid-template-columns:1.2fr 1fr;gap:28px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px}
+  .chart{display:flex;align-items:flex-end;gap:14px;height:260px;margin-top:28px}
+  .chart i{flex:1;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,var(--cyan),#155e75);
+    transform-origin:bottom;animation:grow 1s cubic-bezier(.2,.9,.25,1) both}
+  .chart i:nth-child(odd){background:linear-gradient(180deg,var(--green),#065f46)}
+  .chart i:nth-child(1){animation-delay:.1s}.chart i:nth-child(2){animation-delay:.15s}
+  .chart i:nth-child(3){animation-delay:.2s}.chart i:nth-child(4){animation-delay:.25s}
+  .chart i:nth-child(5){animation-delay:.3s}.chart i:nth-child(6){animation-delay:.35s}
+  .chart i:nth-child(7){animation-delay:.4s}.chart i:nth-child(8){animation-delay:.45s}
+  @keyframes grow{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
+  .feed{display:flex;flex-direction:column;gap:22px;margin-top:26px}
+  .item{display:flex;gap:16px;align-items:flex-start}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--green);margin-top:8px;flex:0 0 10px}
+  .item .who{font-size:17px}.item .what{font-size:15px;color:var(--dim);margin-top:4px}
+
+  .cta{text-align:center;padding:110px 72px 130px}
+  .cta h2{font-size:52px}
+  .cta p{margin-top:18px;font-size:21px;color:var(--dim)}
+  .btn{display:inline-block;margin-top:44px;padding:20px 54px;border-radius:14px;
+    font-size:22px;font-weight:700;color:#04120c;
+    background:linear-gradient(90deg,var(--green),var(--cyan));border:none;cursor:pointer}
+  .foot{text-align:center;padding:0 0 90px;color:#5b6579;font-size:15px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo">ACME CLOUD</div>
+  <nav><span>Product</span><span>Docs</span><span>Pricing</span><span>Changelog</span></nav>
+  <div class="spacer"></div>
+  <input id="search" placeholder="Search deployments...">
+</header>
+
+<section class="hero">
+  <h1>Ship with <em>confidence</em>,<br>not with hope.</h1>
+  <p>Deploy, observe, and roll back in seconds. Acme Cloud watches every release so your
+     team hears about regressions before your users do.</p>
+  <div class="stats">
+    <div class="stat"><div class="k">Deploys today</div><div class="v">1,284</div><div class="d">+18% vs yesterday</div></div>
+    <div class="stat"><div class="k">p95 latency</div><div class="v">142ms</div><div class="d">-9ms this week</div></div>
+    <div class="stat"><div class="k">Error rate</div><div class="v">0.02%</div><div class="d">within budget</div></div>
+    <div class="stat"><div class="k">Uptime</div><div class="v">99.99%</div><div class="d">90 day window</div></div>
+  </div>
+</section>
+
+<section class="runs">
+  <h2>Recent deployments</h2>
+  <table>
+    <thead><tr><th>Service</th><th>Version</th><th>Region</th><th>Duration</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>api-gateway</td><td>v2.14.1</td><td>sin-1</td><td>42s</td><td><span class="pill ok">passed</span></td></tr>
+      <tr><td>payments</td><td>v8.2.0</td><td>fra-1</td><td>1m 18s</td><td><span class="pill run">canary 25%</span></td></tr>
+      <tr><td>notifications</td><td>v1.9.7</td><td>iad-1</td><td>31s</td><td><span class="pill ok">passed</span></td></tr>
+      <tr><td>search-index</td><td>v4.0.3</td><td>sin-1</td><td>2m 04s</td><td><span class="pill fail">rolled back</span></td></tr>
+      <tr><td>web-app</td><td>v3.3.12</td><td>fra-1</td><td>58s</td><td><span class="pill ok">passed</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="activity">
+  <div class="card">
+    <h2>Deploy frequency</h2>
+    <div class="chart">
+      <i style="height:38%"></i><i style="height:52%"></i><i style="height:44%"></i>
+      <i style="height:68%"></i><i style="height:61%"></i><i style="height:82%"></i>
+      <i style="height:74%"></i><i style="height:96%"></i>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Activity</h2>
+    <div class="feed">
+      <div class="item"><span class="dot"></span><div><div class="who">priya deployed payments v8.2.0</div><div class="what">canary at 25% &middot; 2 minutes ago</div></div></div>
+      <div class="item"><span class="dot"></span><div><div class="who">kenji rolled back search-index</div><div class="what">regression in query latency &middot; 14 minutes ago</div></div></div>
+      <div class="item"><span class="dot"></span><div><div class="who">CI passed on api-gateway</div><div class="what">1,204 tests &middot; 42 seconds &middot; 31 minutes ago</div></div></div>
+      <div class="item"><span class="dot"></span><div><div class="who">sara opened incident #482</div><div class="what">elevated 5xx in iad-1 &middot; resolved &middot; 1 hour ago</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Start shipping today</h2>
+  <p>Free for the first 10,000 requests. No credit card required.</p>
+  <button class="btn">Create free account</button>
+</section>
+<div class="foot">Acme Cloud &middot; example application bundled with the demo-video template</div>
+
+</body>
+</html>

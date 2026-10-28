@@ -1,0 +1,25 @@
+# Python / venv
+.venv/
+__pycache__/
+*.pyc
+
+# Local secrets / env (never commit)
+.env
+.env.*
+
+# Wallet state: encrypted profiles + downloaded extensions (never commit)
+wallets/extensions/
+wallets/profiles/
+wallets/.cache/
+
+# Generated video artifacts (regenerate with ./scripts/run.sh)
+videos/*/audio/
+videos/*/clips/
+videos/*/build/
+videos/*/work/
+videos/*/qa/
+videos/*/out/
+
+# OS / editor
+.DS_Store
+*.swp

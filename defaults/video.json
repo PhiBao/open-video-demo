@@ -1,0 +1,40 @@
+{
+  "name": "demo",
+  "output": "out/demo.mp4",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "voice": "en-US-GuyNeural",
+  "rate": "-4%",
+  "volume": "+0%",
+  "pad": 0.45,
+  "trim": 0.6,
+  "crf": 20,
+  "preset": "medium",
+  "burn_subtitles": true,
+  "loudness": "I=-16:TP=-1.5:LRA=11",
+  "subtitle_style": "FontName=DejaVu Sans,FontSize=30,PrimaryColour=&HFFFFFF,OutlineColour=&H80000000,BorderStyle=1,Outline=2,Shadow=1,MarginV=46,PlayResX=1920,PlayResY=1080",
+  "theme": {
+    "bg": "#06070b",
+    "accent1": "#34d399",
+    "accent2": "#22d3ee",
+    "accent3": "#a78bfa",
+    "ink": "#e8e8f0",
+    "muted": "#9aa2bd",
+    "faint": "#6f7794",
+    "hi": "#f87171",
+    "hi2": "#34d399",
+    "subc": "#5eead4",
+    "shade": "rgba(0,0,0,.30)"
+  },
+  "branding": {
+    "name": "DEMOCUT",
+    "tagline": "FROM REPO TO NARRATED DEMO VIDEO IN ONE COMMAND",
+    "sub": "Playwright scenes &middot; edge-tts narration &middot; ffmpeg assembly",
+    "note": "No API keys. No timeline editor. Fully reproducible.",
+    "meta": "hackathon demo template &middot; 1920&times;1080 &middot; 30fps",
+    "headline": "<b>Most hackathon demos are a screen recording.</b><br><i>This one is a production.</i>",
+    "links": "github.com/PhiBao/open-video-demo",
+    "footnote": "copy the folder &rarr; write script/story.json &rarr; ./scripts/run.sh"
+  }
+}

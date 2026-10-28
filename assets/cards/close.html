@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Centered product outro. Wordmark, payoff line, links. -->
+<html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}html,body{margin:0;width:1920px;height:1080px;overflow:hidden}
+body{background:{{bg}};font-family:'Ubuntu Sans','DejaVu Sans',system-ui,sans-serif;
+ display:flex;align-items:center;justify-content:center}
+.vig{position:fixed;inset:0;pointer-events:none;
+ background:radial-gradient(120% 85% at 50% 38%, transparent 58%, {{shade}})}
+.stage{position:relative;z-index:2;text-align:center;max-width:1520px;padding:0 80px;
+ transform:scale(1.03);animation:settle 1.5s cubic-bezier(.16,1,.3,1) both}
+@keyframes settle{from{transform:scale(1.03)}to{transform:scale(1)}}
+.rule{width:58px;height:5px;border-radius:3px;background:{{accent1}};margin:0 auto 40px;
+ transform:scaleX(0);animation:rule .8s cubic-bezier(.16,1,.3,1) .25s both}
+@keyframes rule{to{transform:scaleX(1)}}
+.mask{overflow:hidden;padding-bottom:.06em;margin-bottom:-.06em}
+h1{font-size:112px;line-height:1;margin:0;letter-spacing:-.04em;font-weight:800;color:{{ink}};
+ white-space:nowrap;transform:translateY(108%);
+ animation:rise 1s cubic-bezier(.16,1,.3,1) .14s both}
+@keyframes rise{to{transform:translateY(0)}}
+.big{font-size:46px;color:{{ink}};line-height:1.5;margin-top:34px;text-wrap:balance;
+ opacity:0;animation:up .8s cubic-bezier(.16,1,.3,1) .52s both}
+.big b{color:{{hi}};font-weight:700}
+.big i{color:{{hi2}};font-style:normal}
+.links{margin-top:54px;font-size:27px;color:{{muted}};
+ opacity:0;animation:up .8s cubic-bezier(.16,1,.3,1) .7s both}
+.foot{margin-top:14px;font-size:22px;color:{{faint}};
+ opacity:0;animation:up .8s cubic-bezier(.16,1,.3,1) .84s both}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+</style></head><body>
+<div class="vig"></div>
+<div class="stage">
+<div class="rule"></div>
+<div class="mask"><h1>{{name}}</h1></div>
+<div class="big">{{headline}}</div>
+<div class="links">{{links}}</div>
+<div class="foot">{{footnote}}</div>
+</div>
+<script>
+document.querySelectorAll('h1').forEach(function(el){
+  var size = parseFloat(getComputedStyle(el).fontSize);
+  while (el.scrollWidth > el.clientWidth && size > 64) {
+    size -= 4; el.style.fontSize = size + 'px';
+  }
+});
+</script>
+</body></html>
