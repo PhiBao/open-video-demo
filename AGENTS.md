@@ -57,15 +57,18 @@ If you cannot verify a fact, do not put it in the video.
 
 ### 2. Write the story - it is a product demo
 
-Structure that works for product demos (60-120s total). The spine is the
-same for every product; what changes is which surface carries it:
+Structure that works for product demos. Length follows the product, not a
+quota - roughly **60-180s**: a focused CLI flow may be done in a minute, a
+rich web app may need three. Use the shortest cut that shows the product
+working and proves it; stop there. The spine is the same for every
+product; what changes is which surface carries it:
 
 | # | Role | Content |
 |---|---|---|
 | 1 | Hook | one-sentence framing; title card |
 | 2 | Problem | the gap, with real measured numbers |
 | 3 | Product | the actual product surface, working - the hero of the video |
-| 4-6 | Proof | real results: live app state, a fill, a signed receipt, test output |
+| 4-7 | Proof | real results: live app state, a fill, a signed receipt, test output - at least two distinct proofs |
 | last | Close | one-line thesis + links; close card |
 
 **Pick scenes to fit the product** - the scene kind is a fact about the
@@ -85,7 +88,15 @@ product shown only through a web screenshot hides the actual demo.
 Duration rules:
 
 - Speech is ~2.5 words/second (voice/rate in config). A 40-word segment ≈ 16s.
-- 3-9 segments. Each 8-30s. **Every second must show something new.**
+- **Total: roughly 60-180s, i.e. ~150-450 words of narration** - let the
+  product decide. There is no hard gate; `qa.py` only reports duration.
+  Judge it by content: if the product is shown working and proved, it is
+  long enough, whether that took sixty seconds or three minutes.
+- 4-10 segments, most 8-30s each. **Every second must show something new.**
+- Too thin (product barely shown, proof missing): add depth - a second
+  proof, a deeper product pass, the failure case - never pad a card or
+  slow a scene to hit a number. Dragging: cut a segment or tighten
+  narration; keep hook/product/proof/close.
 - Speak numbers as words (`forty cents`, not `$0.40`). Spell URLs/domains
   (`okx dot A I`). No emoji, no markdown, no stage directions.
 - Do not read terminal text verbatim - narration adds meaning, the screen
@@ -260,7 +271,7 @@ generated files.
 | `clip ... < needed` QA warning | scene/actions ran past narration; shorten `after`/`dur` or lengthen text |
 | unresolved card placeholders | add the key to `branding` or scene `vars` |
 | subtitles wrap past 2 lines | shorten the sentence in `text` |
-| output too long | cut a segment; keep hook/product/proof/close |
+| video too thin / dragging | thin: add a proof / deeper product pass (never pad); dragging: cut a segment; keep hook/product/proof/close |
 | video feels like a scene checklist | product scenes too thin; give `page` the screen time; drop `term` when the product has no terminal |
 | `no project found` | `./scripts/new.sh <name>` then `--project <name>` |
 
@@ -273,4 +284,5 @@ generated files.
 - [ ] `qa/report.txt` shows no warnings (or every warning is understood).
 - [ ] Contact sheet: every frame has real content, matches its narration.
 - [ ] Every number/hash/URL shown exists in the project (no invented facts).
-- [ ] Total duration is inside the target (60-120s for hackathons).
+- [ ] Duration fits the product (roughly 60-180s): product shown working
+      and proved, with no padding and no missing proof.

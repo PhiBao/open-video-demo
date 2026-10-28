@@ -26,7 +26,7 @@ sed -e "s/\"name\": \"demo\"/\"name\": \"$name\"/" \
 
 cat > "$dest/script/story.json" <<EOF
 {
-  "_howto": "Product demo first: show the product's real surface, with real proof. Scenes by product type - web app: page scenes (s2 below); CLI/dev tool: term scenes with real copied output; API/agent: term for request -> result. See AGENTS.md. Rewrite every 'text' as narration, then delete this key.",
+  "_howto": "Product demo first: show the product's real surface, with real proof. Length follows the product (roughly 60-180s, ~150-450 words) - show it working, prove it, then stop. Scenes by product type - web app: page scenes (s2 below); CLI/dev tool: term scenes with real copied output; API/agent: term for request -> result. See AGENTS.md. Rewrite every 'text' as narration, then delete this key.",
   "voice": "en-US-GuyNeural",
   "segments": [
     {

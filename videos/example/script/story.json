@@ -10,140 +10,110 @@
       }
     },
     {
-      "id": "s2_term",
-      "text": "First you write the story: a title, a problem, the product working, and a close. Every segment gets narration, generated locally. Terminal scenes are scripted line by line, so the screen shows exactly what the tool printed.",
+      "id": "s2_problem",
+      "text": "Here is the usual hackathon demo. Someone records their screen at midnight, whispers over it, and uploads whatever happened. If the app stalls, the take is ruined. If they talk too fast, nobody can read the screen. And there is no way to fix one sentence without recording everything again.",
+      "scene": {
+        "kind": "card",
+        "template": "title-left",
+        "vars": {
+          "kicker": "THE USUAL DEMO",
+          "name": "RECORDED AT MIDNIGHT.",
+          "tagline": "ONE TAKE, WHISPERED OVER, UPLOADED AS-IS.",
+          "sub": "A stalled app ruins the take. A rushed sentence hides the screen.",
+          "note": "Fixing one line means recording everything again.",
+          "meta": "the problem: no script &middot; no retakes &middot; no proof it works"
+        }
+      }
+    },
+    {
+      "id": "s3_term",
+      "text": "So instead, you write the story once: a hook, a problem, the product working, proof you can point to, and a close. Every segment gets its own narration, generated locally. Terminal scenes are scripted line by line, so the screen shows exactly what the tool printed.",
       "scene": {
         "kind": "term",
         "title": "democut - one command to a finished demo",
         "lines": [
-          {
-            "at": 0.4,
-            "type": "cmd",
-            "text": "./scripts/run.sh",
-            "cps": 16
-          },
-          {
-            "at": 2.0,
-            "text": "[tts]    s1_title    narration   13.8s",
-            "cls": "dim"
-          },
-          {
-            "at": 2.9,
-            "text": "[tts]    s2_term     narration   15.6s",
-            "cls": "dim"
-          },
-          {
-            "at": 3.8,
-            "text": "[tts]    s3_app      narration   16.3s",
-            "cls": "dim"
-          },
-          {
-            "at": 4.7,
-            "text": "[tts]    s4_close    narration   12.8s",
-            "cls": "dim"
-          },
-          {
-            "at": 5.8,
-            "type": "rule"
-          },
-          {
-            "at": 6.8,
-            "text": "[rec]    card    s1_title     ok",
-            "cls": "dim"
-          },
-          {
-            "at": 7.7,
-            "text": "[rec]    term    s2_term      13 lines",
-            "cls": "dim"
-          },
-          {
-            "at": 8.6,
-            "text": "[rec]    page    s3_app       7 actions",
-            "cls": "dim"
-          },
-          {
-            "at": 9.5,
-            "text": "[rec]    card    s4_close     ok",
-            "cls": "dim"
-          },
-          {
-            "at": 10.6,
-            "text": "[build]  trim -> concat -> subtitles -> loudnorm",
-            "cls": "white"
-          },
-          {
-            "at": 12.0,
-            "text": "[qa]     no issues  -  contact sheet rendered",
-            "cls": "green"
-          },
-          {
-            "at": 13.4,
-            "text": "out/demo.mp4   60.3s   1080p30   ready",
-            "cls": "green",
-            "flash": "g"
-          }
+          { "at": 0.4, "type": "cmd", "text": "./scripts/run.sh", "cps": 16 },
+          { "at": 2.0, "text": "[tts]    s1_title    narration", "cls": "dim" },
+          { "at": 2.9, "text": "[tts]    s2_problem  narration", "cls": "dim" },
+          { "at": 3.8, "text": "[tts]    s3_term     narration", "cls": "dim" },
+          { "at": 4.7, "text": "[tts]    s4_app      narration", "cls": "dim" },
+          { "at": 5.6, "text": "[tts]    s5_deep     narration", "cls": "dim" },
+          { "at": 6.5, "text": "[tts]    s6_proof    narration", "cls": "dim" },
+          { "at": 7.4, "text": "[tts]    s7_close    narration", "cls": "dim" },
+          { "at": 8.6, "type": "rule" },
+          { "at": 9.6, "text": "[rec]    card    s1_title     ok", "cls": "dim" },
+          { "at": 10.5, "text": "[rec]    card    s2_problem   ok", "cls": "dim" },
+          { "at": 11.4, "text": "[rec]    term    s3_term      scripted lines", "cls": "dim" },
+          { "at": 12.3, "text": "[rec]    page    s4_app       7 actions", "cls": "dim" },
+          { "at": 13.2, "text": "[rec]    page    s5_deep      6 actions", "cls": "dim" },
+          { "at": 14.1, "text": "[rec]    term    s6_proof     scripted lines", "cls": "dim" },
+          { "at": 15.0, "text": "[rec]    card    s7_close     ok", "cls": "dim" },
+          { "at": 16.2, "text": "[build]  trim -> concat -> subtitles -> loudnorm", "cls": "white" },
+          { "at": 17.6, "text": "[qa]     contact sheet  -  no issues", "cls": "green" },
+          { "at": 19.0, "text": "out/demo.mp4   1080p30   ready", "cls": "green", "flash": "g" }
         ]
       }
     },
     {
-      "id": "s3_app",
+      "id": "s4_app",
       "text": "Live pages record themselves: scrolls, clicks, typed text, a visible cursor. The build measures every clip against the narration, trims the lead-in, and freezes the last frame when a scene runs short. That is why every segment lands on the beat.",
       "scene": {
         "kind": "page",
         "src": "app/index.html",
         "zoom": 1.5,
-        "wait_for": [
-          "text=Ship with confidence"
-        ],
+        "wait_for": ["text=Ship with confidence"],
         "actions": [
-          {
-            "action": "move",
-            "x": 0.5,
-            "y": 0.12,
-            "dur": 0.7
-          },
-          {
-            "action": "scrollTo",
-            "sel": ".stats",
-            "dur": 1.2,
-            "after": 0.6
-          },
-          {
-            "action": "scrollTo",
-            "sel": ".runs",
-            "dur": 1.2,
-            "after": 0.5
-          },
-          {
-            "action": "click",
-            "sel": "#search",
-            "after": 0.3
-          },
-          {
-            "action": "type",
-            "sel": "#search",
-            "text": "deploy confidence",
-            "cps": 16,
-            "after": 0.5
-          },
-          {
-            "action": "scrollTo",
-            "sel": ".activity",
-            "dur": 1.1,
-            "after": 0.7
-          },
-          {
-            "action": "scrollTo",
-            "sel": ".cta",
-            "dur": 1.2,
-            "after": 1.1
-          }
+          { "action": "move", "x": 0.5, "y": 0.12, "dur": 0.7 },
+          { "action": "scrollTo", "sel": ".stats", "dur": 1.2, "after": 0.6 },
+          { "action": "scrollTo", "sel": ".runs", "dur": 1.2, "after": 0.5 },
+          { "action": "click", "sel": "#search", "after": 0.3 },
+          { "action": "type", "sel": "#search", "text": "deploy confidence", "cps": 16, "after": 0.5 },
+          { "action": "scrollTo", "sel": ".activity", "dur": 1.1, "after": 0.7 },
+          { "action": "scrollTo", "sel": ".cta", "dur": 1.2, "after": 1.1 }
         ]
       }
     },
     {
-      "id": "s4_close",
-      "text": "Then ffmpeg muxes, normalizes loudness, and burns subtitles. One file, ready to upload. Copy this folder into your project, rewrite the story, and ship.",
+      "id": "s5_deep",
+      "text": "The recorder follows a script, not a mouse. It moves to a section, waits for real text to appear, types into the search box, and clicks what a user would click. If a selector misses, the run prints a warning instead of silently filming the wrong thing. What you see is the actual page, at full size, doing the actual work.",
+      "scene": {
+        "kind": "page",
+        "src": "app/index.html",
+        "zoom": 1.5,
+        "wait_for": ["text=Ship with confidence"],
+        "actions": [
+          { "action": "scrollTo", "sel": ".activity", "dur": 1.2, "after": 0.6 },
+          { "action": "move", "x": 0.3, "y": 0.4, "dur": 0.7, "after": 0.5 },
+          { "action": "scrollTo", "y": 0.0, "dur": 1.0, "after": 0.4 },
+          { "action": "click", "sel": "#search", "after": 0.3 },
+          { "action": "type", "sel": "#search", "text": "rollback safety", "cps": 16, "after": 0.6 },
+          { "action": "scrollTo", "sel": ".cta", "dur": 1.2, "after": 1.0 }
+        ]
+      }
+    },
+    {
+      "id": "s6_proof",
+      "text": "And the result checks itself. The build writes a contact sheet, one frame from every part of the video, plus a frame at the middle of every segment. If a scene is blank, frozen, or out of sync with the narration, you see it in the sheet before anyone else does. Nothing ships on a green checkmark alone.",
+      "scene": {
+        "kind": "term",
+        "title": "democut - verify the result",
+        "lines": [
+          { "at": 0.4, "type": "cmd", "text": "./scripts/run.sh --project example", "cps": 16 },
+          { "at": 3.0, "text": "[qa]  file       out/demo.mp4", "cls": "dim" },
+          { "at": 5.0, "text": "[qa]  video      1920x1080  30fps  h264", "cls": "dim" },
+          { "at": 7.0, "text": "[qa]  audio      aac  48000Hz  loudness checked", "cls": "dim" },
+          { "at": 9.4, "text": "[qa]  duration   reported - length follows the product", "cls": "white" },
+          { "at": 12.0, "type": "rule" },
+          { "at": 13.2, "text": "[qa]  contact    qa/contact_sheet.jpg  (16 frames)", "cls": "dim" },
+          { "at": 15.8, "text": "[qa]  frames     qa/frames/*.jpg  (one per segment)", "cls": "dim" },
+          { "at": 18.4, "text": "[qa]  black gaps  none    short clips  none", "cls": "dim" },
+          { "at": 21.0, "text": "PASS  no issues", "cls": "green", "flash": "g" }
+        ]
+      }
+    },
+    {
+      "id": "s7_close",
+      "text": "Then ffmpeg muxes the audio, normalizes the loudness, and burns the subtitles. One file, ready to upload, with a subtitle sidecar for platforms that want it. Copy this folder into your project, rewrite the story, point the scenes at your product, and ship a demo that took minutes, not a weekend.",
       "scene": {
         "kind": "card",
         "template": "close"
