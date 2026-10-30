@@ -208,10 +208,59 @@ Templates: template `assets/cards/title.html`, `close.html`, overridable with
   its own lead-in automatically.
 - Selector misses are printed as warnings - always check them.
 
-### Crypto demos - wallet connect / sign / transaction
+### Crypto demos - injected wallet first, extension second
 
-When a demo needs a real wallet signature, use the local MetaMask profile.
-It covers EVM and Solana accounts from one seed. Setup and troubleshooting
+A connect prompt is dead screen time: the viewer came to see the product, and
+a popup covers it. So the default for a crypto demo is an **injected wallet**:
+one test key from `wallets/.env`, already connected when the page loads. On
+camera the product starts in its signed-in state, exactly like the user's own
+session.
+
+**Ask the user for the key** before building the demo. Say plainly that it
+must be a test key with no funds, and that its address will appear on screen.
+Never invent a key, never reuse one found in a repo, and never put a key with
+real funds in `.env`. If the user has no test key, stop and ask; do not
+quietly fall back to filming a connect flow.
+
+```bash
+cp wallets/.env.example wallets/.env    # then fill the keys in by hand
+./scripts/setup.sh --wallet             # eth-account + solders
+.venv/bin/python scripts/wallet_inject.py --check
+.venv/bin/python scripts/wallet_inject_check.py   # real browser, both chains
+```
+
+Then point the scene at it:
+
+```json
+{"kind":"page","src":"https://app.example","wallet":"inject","chain":"evm"}
+```
+
+Or set it once for the whole demo in `config/video.json`:
+
+```json
+{"wallet": "inject", "chain": "evm"}
+```
+
+What the injected wallet does, and does not do:
+
+- `eth_accounts` / `eth_requestAccounts`, `eth_chainId`, `wallet_*` and the
+  EIP-6963 announcement are answered locally, so dapps see a connected account
+  without a prompt. Solana registers through wallet-standard
+  (`solana:signMessage`, `signTransaction`, `signAndSendTransaction`).
+- `personal_sign` and `eth_signTypedData_v4` are signed for real with the key.
+- Read calls (`eth_call`, `eth_getBalance`, ...) go to `EVM_RPC_URL`.
+- A transaction is signed but **not broadcast** unless `WALLET_BROADCAST=1`
+  and an RPC URL are set. A demo that only needs the signed-in state should
+  leave broadcasting off.
+- `wallet_approve` / `wallet_unlock` / `wallet_click` actions are skipped
+  silently in this mode, so a story written for the extension flow still runs.
+
+A bare `"crypto": true` picks the injected wallet when a key is configured and
+falls back to the MetaMask profile otherwise. Be explicit in a real project:
+silent fallbacks are how a connect popup ends up in the final cut.
+
+The extension flow below is still there for demos that genuinely need to show
+approval UI, or when the user will not share a key. Setup and troubleshooting
 live in `wallets/README.md`.
 
 ```bash

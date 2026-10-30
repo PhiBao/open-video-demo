@@ -22,6 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lib  # noqa: E402
+import wallet_inject  # noqa: E402
 import wallet_lib  # noqa: E402
 
 from playwright.sync_api import sync_playwright  # noqa: E402
@@ -319,10 +320,15 @@ def resolve_src(src):
 
 
 def new_context(browser, cfg):
+    # Authenticated demos need the session cookie in every scene, because each
+    # scene is a fresh browser context. Point DEMO_STORAGE_STATE at a Playwright
+    # storage-state JSON to start signed in without replaying the login screen.
+    storage_state = os.environ.get("DEMO_STORAGE_STATE")
     ctx = browser.new_context(
         viewport={"width": cfg["width"], "height": cfg["height"]},
         record_video_dir=str(lib.CLIPS),
         record_video_size={"width": cfg["width"], "height": cfg["height"]},
+        **({"storage_state": storage_state} if storage_state else {}),
     )
     # Optional page prelude. A demo of a product that needs a wallet cannot be
     # recorded with a wallet popup in the way, so a project may point
@@ -332,6 +338,41 @@ def new_context(browser, cfg):
     if init_script:
         ctx.add_init_script(path=init_script)
     return ctx
+
+
+def wallet_mode(scene, cfg):
+    """Which wallet surface a page scene wants.
+
+    "inject" is the demo mode: accounts come from wallets/.env and are already
+    connected, so no popup is filmed. A bare `"crypto": true` uses it when a
+    key is configured and falls back to the MetaMask profile when not.
+    """
+    mode = scene.get("wallet") or cfg.get("wallet")
+    if isinstance(mode, str) and mode.strip().lower() in wallet_inject.MODES:
+        return "inject"
+    if not mode and scene.get("crypto"):
+        return "inject" if wallet_inject.keys_available() else wallet_lib.DEFAULT_WALLET
+    if not mode:
+        return None
+    return wallet_lib.resolve_wallet(mode)
+
+
+def new_inject_context(browser, scene, cfg):
+    """Plain context + a provider that is already connected."""
+    ctx = new_context(browser, cfg)
+    wallet = wallet_inject.Wallet.from_env(
+        chain=scene.get("chain") or cfg.get("chain") or "evm",
+        chain_id=scene.get("chain_id") or cfg.get("chain_id"),
+    )
+    ctx.expose_binding("__demo_wallet_call",
+                       lambda _source, payload: wallet.handle(payload))
+    ctx.add_init_script(script=wallet_inject.init_script(wallet))
+    if wallet.evm:
+        who, chain = wallet.evm_address, wallet.resolve_chain_id()
+    else:
+        who, chain = wallet.sol_address, wallet.sol_cluster()
+    print(f"  wallet  injected {who[:6]}...{who[-4:]}  chain {chain}")
+    return ctx, wallet
 
 
 def new_wallet_context(playwright, wallet, cfg, headless=False):
@@ -393,12 +434,12 @@ def record_static(browser, sid, scene, dur, cfg):
 
 
 def record_page(browser, sid, scene, dur, cfg, playwright=None):
-    wallet = scene.get("wallet") or cfg.get("wallet")
-    if not wallet and scene.get("crypto"):
-        wallet = wallet_lib.DEFAULT_WALLET
-    if wallet:
-        wallet = wallet_lib.resolve_wallet(wallet)
-    if wallet:
+    wallet = wallet_mode(scene, cfg)
+    injected = None
+    if wallet == "inject":
+        ctx, injected = new_inject_context(browser, scene, cfg)
+        pg = ctx.new_page()
+    elif wallet:
         ctx = new_wallet_context(
             playwright, wallet, cfg,
             headless=bool(scene.get("headless", False)),
@@ -471,6 +512,16 @@ def record_page(browser, sid, scene, dur, cfg, playwright=None):
         if os.environ.get("DEMO_DEBUG"):
             print(f"  t {time.time()-t_actions:6.2f}s {sid} {act} {a.get('sel')!r}"
                   f" url={pg.url.split('3100')[-1] or '/'}", file=sys.stderr)
+        if injected is not None and act in ("wallet_unlock", "wallet_approve",
+                                            "wallet_click"):
+            # The account is already connected: a script written for the
+            # extension flow still runs, its wallet steps just do nothing.
+            if os.environ.get("DEMO_DEBUG"):
+                print(f"  t {time.time()-t_actions:6.2f}s {sid} "
+                      f"{act} skipped (injected wallet)", file=sys.stderr)
+            if a.get("after"):
+                pg.wait_for_timeout(int(a["after"] * 1000))
+            continue
         if act == "wallet_unlock":
             ok = wallet_lib.unlock(
                 ctx, scene.get("wallet"),
@@ -595,6 +646,11 @@ def main():
         side = lib.CLIPS / f"{sid}.json"
         clip = lib.CLIPS / f"{sid}.webm"
         h = scene_hash(scene, seg["dur"], cfg)
+        if scene.get("kind") == "page" and wallet_mode(scene, cfg) == "inject":
+            # The address is on camera, so a different demo account means a
+            # different clip.
+            h = hashlib.sha256(
+                (h + wallet_inject.fingerprint_env()).encode()).hexdigest()[:16]
         if not args.force and clip.exists() and side.exists() \
                 and lib.load_json(side).get("hash") == h:
             print(f"  {sid:<16} cached")

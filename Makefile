@@ -2,10 +2,16 @@ PY ?= .venv/bin/python
 PROJECT ?= example
 NAME ?=
 
-.PHONY: setup new list all tts record build qa clean
+.PHONY: setup setup-wallet wallet-check new list all tts record build qa clean
 
 setup:
 	./scripts/setup.sh
+
+setup-wallet:
+	./scripts/setup.sh --wallet
+
+wallet-check:
+	$(PY) scripts/wallet_inject_check.py
 
 new:
 	./scripts/new.sh $(NAME)

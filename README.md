@@ -53,6 +53,25 @@ Scenes are JSON in `script/story.json` - see [AGENTS.md](AGENTS.md) for the
 full reference. `videos/example/app/index.html` is a placeholder product page
 so the example runs end to end out of the box.
 
+## Crypto demos
+
+A connect popup is screen time spent on the wallet instead of the product, so
+crypto demos use an injected wallet by default: a test key from
+`wallets/.env` is already connected when the page loads, and signatures are
+real. Set `"wallet": "inject"` on a scene (or on the video in
+`config/video.json`). Reads go through `EVM_RPC_URL`; transactions are only
+broadcast when `WALLET_BROADCAST=1`.
+
+```bash
+cp wallets/.env.example wallets/.env
+./scripts/setup.sh --wallet
+.venv/bin/python scripts/wallet_inject_check.py
+```
+
+The MetaMask profile (`"wallet": "metamask"`) is still available when the
+approval flow itself is what the demo is about. Details in
+[wallets/README.md](wallets/README.md).
+
 ## Layout
 
 ```
@@ -61,6 +80,8 @@ defaults/video.json    config copied by scripts/new.sh
 scripts/               new.sh, run.sh, tts.py, record.py, build.py, qa.py, setup.sh
 assets/cards/*.html    shared card templates with {{placeholders}}
 assets/themes/*.css    shared terminal theme
+wallets/               test keys, injected wallet, optional MetaMask profile
+videos/example/        the only project committed; others stay local
 videos/<name>/
   script/story.json    the script + scene definitions
   config/video.json    resolution, voice, subtitles, branding
@@ -93,10 +114,14 @@ framework, so the `page` scene always shows the actual product.
 ## What is not in this repo
 
 Generated artifacts (`audio/`, `clips/`, `build/`, `work/`, `qa/`, `out/`),
-the local `.venv`, and wallet state (`wallets/profiles/`,
+the local `.venv`, and wallet state (`wallets/.env`, `wallets/profiles/`,
 `wallets/extensions/`) are gitignored. Wallet profiles hold an encrypted
-test wallet — never commit them, and never use a seed with real funds
+test wallet — never commit them, and never use a key or seed with real funds
 (see `wallets/README.md`).
+
+`videos/` is ignored except `videos/example/`, so per-project work stays
+local by default. Publish one deliberately with
+`git add -f videos/<name>`.
 
 ## License
 

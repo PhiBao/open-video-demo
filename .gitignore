@@ -3,22 +3,28 @@
 __pycache__/
 *.pyc
 
-# Local secrets / env (never commit)
+# Local secrets / env (never commit). The example is the only exception.
 .env
 .env.*
+!.env.example
+!wallets/.env.example
 
 # Wallet state: encrypted profiles + downloaded extensions (never commit)
 wallets/extensions/
 wallets/profiles/
 wallets/.cache/
 
-# Generated video artifacts (regenerate with ./scripts/run.sh)
-videos/*/audio/
-videos/*/clips/
-videos/*/build/
-videos/*/work/
-videos/*/qa/
-videos/*/out/
+# Only the bundled example ships with the template. Every other demo is
+# local work: add one deliberately with `git add -f videos/<name>` if it
+# should be published.
+videos/*
+!videos/example/
+videos/example/audio/
+videos/example/clips/
+videos/example/build/
+videos/example/work/
+videos/example/qa/
+videos/example/out/
 
 # OS / editor
 .DS_Store

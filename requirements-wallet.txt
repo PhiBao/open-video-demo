@@ -1,0 +1,5 @@
+# Optional: only needed for wallet scenes that sign with a local key
+# (`"wallet": "inject"`). Installed by ./scripts/setup.sh --wallet, or
+# automatically when a key is present in wallets/.env.
+eth-account>=0.11
+solders>=0.21

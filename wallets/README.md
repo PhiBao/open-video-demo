@@ -1,18 +1,71 @@
-# Local MetaMask profile for video recording
+# Wallets for crypto demos
+
+Two ways to give a dapp a wallet during recording:
+
+| mode | on camera | use it for |
+|---|---|---|
+| **inject** (default) | nothing - the account is already connected | every product demo; the viewer sees the app, not a popup |
+| metamask | the real connect / sign / confirm prompts | demos of the wallet flow itself; a user who will not share a key |
+
+Both are test-only. The injected mode signs with a key from `wallets/.env`;
+the extension mode imports a seed into a throwaway browser profile. Never put
+a key or seed with real funds in either one.
+
+```
+wallets/
+├── .env                   test keys, gitignored (.env.example is committed)
+├── inject-dapp/           connect + sign check page for the injected wallet
+├── extensions/metamask/   unpacked extension (gitignored)
+├── profiles/metamask/     persistent Chromium profile (gitignored)
+├── test-dapp/             check page for the extension wallet
+└── README.md
+```
+
+## Injected wallet
+
+```
+wallets/.env
+  EVM_PRIVATE_KEY=     0x + 64 hex
+  SOL_PRIVATE_KEY=     base58 secret key (the 64-byte keypair)
+  EVM_RPC_URL=         optional; reads and chain id
+  SOL_RPC_URL=         optional; Solana signAndSendTransaction
+  EVM_CHAIN_ID=        optional fallback, 1 = mainnet
+  WALLET_BROADCAST=0   leave 0 unless the demo sends a real transaction
+```
+
+Ask the user for the key; do not generate one for them. The address shows up
+in the video, so it has to be an account they are happy to publish.
+
+```bash
+cp wallets/.env.example wallets/.env     # fill in by hand
+./scripts/setup.sh --wallet              # eth-account + solders
+.venv/bin/python scripts/wallet_inject.py --check        # derive + sign, no browser
+.venv/bin/python scripts/wallet_inject_check.py          # real browser, EVM + Solana
+```
+
+In a story, set `"wallet": "inject"` on the scene, or on the whole video in
+`config/video.json`. The provider is installed before the page loads and
+answers `eth_accounts` with the configured account, so there is no connect
+step to film. `personal_sign` and `eth_signTypedData_v4` return real
+signatures. Transactions are signed but only broadcast when
+`WALLET_BROADCAST=1` and an RPC URL are set.
+
+Scripts written for the extension flow keep working: `wallet_approve`,
+`wallet_unlock` and `wallet_click` actions are skipped when the wallet is
+injected.
+
+Limits: the shim covers the common EIP-1193 calls and the Solana wallet
+standard features. A dapp that needs a vendor-specific API (MetaMask
+multichain `wallet_*` extensions, WalletConnect sessions) still needs the
+extension flow.
+
+## MetaMask profile (extension mode)
 
 A real MetaMask extension in a **persistent Playwright profile**. Import a
 test seed once and the wallet survives every recording run.
 
-MetaMask is the supported wallet for crypto demos. It holds EVM accounts and
-Solana accounts from the same seed, so one profile covers both.
-
-```
-wallets/
-├── extensions/metamask/   unpacked extension (gitignored)
-├── profiles/metamask/     persistent Chromium profile (gitignored)
-├── test-dapp/             harmless connect + sign test page
-└── README.md
-```
+MetaMask holds EVM accounts and Solana accounts from the same seed, so one
+profile covers both.
 
 Phantom files may still exist in `extensions/phantom` and `profiles/phantom`
 from earlier experiments. They are optional and not part of the template's
@@ -20,12 +73,17 @@ crypto flow.
 
 ## Safety rules
 
-- Use a **test-only** seed phrase. Treat it as public.
-- Never put a seed with real funds in this profile.
-- The scripts never read, print, or store the seed phrase. You type it into
-  the wallet UI. The profile directory contains the encrypted wallet, just
+- Use a **test-only** key and seed. Treat both as public: the address is on
+  camera and the key sits in a file on disk.
+- Never put a key or seed with real funds in `wallets/.env` or in the profile.
+- `wallets/.env`, `wallets/extensions/` and `wallets/profiles/` are in
+  `.gitignore`. Check `git check-ignore -v wallets/.env` after touching the
+  ignore rules.
+- The extension scripts never read, print, or store the seed phrase. You type
+  it into the wallet UI; the profile directory holds the encrypted wallet,
   like a normal Chrome profile.
-- `wallets/extensions/` and `wallets/profiles/` are in `.gitignore`.
+- `wallet_inject.py --check` prints addresses only. Keep it that way when you
+  add logging: a key in a terminal log ends up in a screenshot.
 
 ## One-time setup
 

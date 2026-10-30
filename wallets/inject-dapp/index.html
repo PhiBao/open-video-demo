@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Injected wallet check</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f7f4ef; color: #111318;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { width: min(920px, 92vw); padding: 48px 0; }
+  h1 { font-size: 40px; letter-spacing: -.03em; margin: 0 0 8px; }
+  p.lede { color: #6b7280; margin: 0 0 32px; font-size: 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: #fffefb; border: 1px solid #e7e1d8; border-radius: 18px;
+    padding: 24px; box-shadow: 0 12px 34px rgba(17,19,24,.07); }
+  h2 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #6b7280; font-size: 14px; margin: 0 0 18px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  button { appearance: none; border: 0; border-radius: 10px; padding: 11px 16px;
+    font: inherit; font-weight: 650; cursor: pointer; background: #111318; color: #fff; }
+  button.secondary { background: #fff3ed; color: #c2410c; }
+  .out { margin-top: 18px; padding: 14px; border-radius: 10px; background: #f7f4ef;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+    line-height: 1.5; white-space: pre-wrap; word-break: break-all; min-height: 74px; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px;
+    background: #fff3ed; color: #c2410c; font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Injected wallet check</h1>
+  <p class="lede">The account comes from <code>wallets/.env</code> and is connected
+    before the page loads. No popup, no extension.</p>
+  <div class="grid">
+    <section class="card">
+      <h2>EVM <span class="badge">EIP-1193</span></h2>
+      <p class="sub">eth_requestAccounts, personal_sign, typed data</p>
+      <div class="row">
+        <button id="evm-connect">Connect</button>
+        <button id="evm-sign" class="secondary">Sign message</button>
+      </div>
+      <div id="evm-out" class="out">Not checked.</div>
+    </section>
+    <section class="card">
+      <h2>Solana <span class="badge">wallet standard</span></h2>
+      <p class="sub">wallet-standard discovery, signMessage</p>
+      <div class="row">
+        <button id="sol-connect">Connect</button>
+        <button id="sol-sign" class="secondary">Sign message</button>
+      </div>
+      <div id="sol-out" class="out">Not checked.</div>
+    </section>
+  </div>
+</main>
+<script>
+  const wallets = [];
+  window.addEventListener('wallet-standard:register-wallet', (event) => {
+    event.detail((wallet) => { if (!wallets.includes(wallet)) wallets.push(wallet); });
+  });
+
+  const evmOut = document.getElementById('evm-out');
+  const solOut = document.getElementById('sol-out');
+  const show = (el, value) => { el.textContent = value; };
+
+  async function evmConnect() {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    show(evmOut, 'accounts ' + accounts.join(', ') + '\nchainId ' + chainId);
+    return accounts;
+  }
+
+  async function evmSign() {
+    const accounts = await evmConnect();
+    const message = '0x' + Array.from(new TextEncoder().encode('hello demo'))
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+    const signature = await window.ethereum.request({
+      method: 'personal_sign', params: [message, accounts[0]],
+    });
+    show(evmOut, 'account ' + accounts[0] + '\nsignature ' + signature);
+    return signature;
+  }
+
+  async function solWallet() {
+    if (!wallets.length) {
+      window.dispatchEvent(new CustomEvent('wallet-standard:register-wallet', {
+        detail: (wallet) => { if (!wallets.includes(wallet)) wallets.push(wallet); },
+      }));
+    }
+    return wallets.find((w) => w.chains.some((c) => c.startsWith('solana:')));
+  }
+
+  async function solConnect() {
+    const wallet = await solWallet();
+    if (!wallet) throw new Error('no wallet-standard wallet registered');
+    await wallet.features['standard:connect'].connect();
+    const address = wallet.accounts[0].address;
+    show(solOut, 'address ' + address + '\nchains ' + wallet.chains.join(', '));
+    return address;
+  }
+
+  async function solSign() {
+    const wallet = await solWallet();
+    if (!wallet) throw new Error('no wallet-standard wallet registered');
+    await solConnect();
+    const account = wallet.accounts[0];
+    const message = new TextEncoder().encode('hello demo');
+    const [result] = await wallet.features['solana:signMessage']
+      .signMessage({ message, account });
+    const hex = Array.from(result.signature)
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+    show(solOut, 'address ' + account.address + '\nsignature 0x' + hex);
+    return hex;
+  }
+
+  window.runCheck = async () => {
+    const out = { evm: null, sol: null, errors: [] };
+    try { out.evm = { address: (await evmConnect())[0],
+                      signature: await evmSign() }; }
+    catch (e) { out.errors.push('evm: ' + e.message); }
+    try { out.sol = { address: await solConnect(),
+                      signature: await solSign() }; }
+    catch (e) { out.errors.push('sol: ' + e.message); }
+    return out;
+  };
+
+  document.getElementById('evm-connect').onclick = () => evmConnect().catch((e) => show(evmOut, e.message));
+  document.getElementById('evm-sign').onclick = () => evmSign().catch((e) => show(evmOut, e.message));
+  document.getElementById('sol-connect').onclick = () => solConnect().catch((e) => show(solOut, e.message));
+  document.getElementById('sol-sign').onclick = () => solSign().catch((e) => show(solOut, e.message));
+
+  if (window.ethereum) evmConnect().catch(() => {});
+</script>
+</body>
+</html>
