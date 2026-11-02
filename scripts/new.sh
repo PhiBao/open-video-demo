@@ -26,17 +26,17 @@ sed -e "s/\"name\": \"demo\"/\"name\": \"$name\"/" \
 
 cat > "$dest/script/story.json" <<EOF
 {
-  "_howto": "Product demo first: show the product's real surface, with real proof. Length follows the product (roughly 60-180s, ~150-450 words) - show it working, prove it, then stop. Scenes by product type - web app: page scenes (s2 below); CLI/dev tool: term scenes with real copied output; API/agent: term for request -> result. See AGENTS.md. Rewrite every 'text' as narration, then delete this key.",
+  "_howto": "Before writing narration, load the humanizer skill, then write for a judge who does not work in software: what the person does, what the app shows, what changes for them. No stack names, no architecture tour, no 'we implemented'. Product demo first: show the product's real surface, with real proof. Length follows the product (roughly 60-180s, ~150-450 words) - show it working, prove it, then stop. Scenes by product type - web app: page scenes (s2 below); CLI/dev tool: term scenes with real copied output; API/agent: term for request -> result. See AGENTS.md. Rewrite every 'text' as narration, then delete this key.",
   "voice": "en-US-GuyNeural",
   "segments": [
     {
       "id": "s1_hook",
-      "text": "TODO: one-sentence hook for $name. Speak numbers as words.",
+      "text": "TODO: one-sentence hook for $name, in plain words. Speak numbers as words.",
       "scene": { "kind": "card", "template": "title" }
     },
     {
       "id": "s2_product",
-      "text": "TODO: narrate what the viewer sees happening in the product.",
+      "text": "TODO: narrate what the viewer sees happening in the product, as if you were showing it to a friend who is not technical.",
       "scene": {
         "_note": "placeholder app - replace src with your app URL or a local page; for a CLI/dev-tool product replace this whole scene with a 'term' scene (see AGENTS.md)",
         "kind": "page",

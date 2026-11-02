@@ -49,6 +49,11 @@ you are inside the project folder or only one project exists.
 | `term` | synthetic terminal replaying scripted lines | CLI output, benchmarks, test results |
 | `page` | live or local web page with scripted scroll/click/type | showing the actual product |
 
+Narration is a walkthrough, written for someone who will never read the code.
+The agent loads the `humanizer` skill before writing a line, and the screen
+carries the technical detail while the voice says what it means for the user.
+A judge should be able to explain the product back to you after one watch.
+
 Scenes are JSON in `script/story.json` - see [AGENTS.md](AGENTS.md) for the
 full reference. `videos/example/app/index.html` is a placeholder product page
 so the example runs end to end out of the box.

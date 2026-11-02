@@ -57,6 +57,31 @@ If you cannot verify a fact, do not put it in the video.
 
 ### 2. Write the story - it is a product demo
 
+**Load the `humanizer` skill before writing a single `text` field.** Every
+narration line in the story is judged by someone who has the problem and will
+never read the code: a hackathon judge, a founder, a buyer. They will not
+learn what the app does from a stack list, and they will stop listening when
+the voiceover turns into a technical explanation of how it was built.
+
+Write the walkthrough. Say what the person does, what the app shows them, and
+what changes for them. The terminal, the screen and the numbers carry the
+technical detail; the voice explains why it matters.
+
+| sounds like a README | sounds like a demo |
+|---|---|
+| "Playwright drives a persistent Chromium context." | "The video shows your real app, clicking and scrolling like a customer." |
+| "Embeddings go into pgvector with an HNSW index." | "You ask in your own words, and it finds the note you wrote last month." |
+| "The contract calls transferFrom and emits an event." | "The money moves only when both sides agree, and you can check it afterwards." |
+
+- No library, framework, database, or protocol names, unless the product is
+  that thing and the audience already knows it.
+- No architecture tour, no "we implemented", no file paths, no identifiers.
+- One idea per sentence. If a line needs the repo open to parse, cut it.
+- Proof stays human: what the user sees happen, what it saves them, what it
+  costs if it is wrong. A number is good when it describes their outcome.
+- If you would not say the line out loud to a smart friend who does not work
+  in software, rewrite it.
+
 Structure that works for product demos. Length follows the product, not a
 quota - roughly **60-180s**: a focused CLI flow may be done in a minute, a
 rich web app may need three. Use the shortest cut that shows the product
@@ -100,7 +125,8 @@ Duration rules:
 - Speak numbers as words (`forty cents`, not `$0.40`). Spell URLs/domains
   (`okx dot A I`). No emoji, no markdown, no stage directions.
 - Do not read terminal text verbatim - narration adds meaning, the screen
-  shows detail. Keep them in sync: say what appears, when it appears.
+  shows detail. Keep them in sync: say what appears, when it appears. A log
+  line full of hashes is fine on screen; the voice says what it proves.
 
 Target the **visual** to the narration at the midpoint of each segment; that
 is the frame QA shows you.
@@ -333,5 +359,8 @@ generated files.
 - [ ] `qa/report.txt` shows no warnings (or every warning is understood).
 - [ ] Contact sheet: every frame has real content, matches its narration.
 - [ ] Every number/hash/URL shown exists in the project (no invented facts).
+- [ ] Outsider test: someone who does not work in software watches it and
+      can say what the product does for them. No library or stack names in
+      the voiceover unless the product is that thing.
 - [ ] Duration fits the product (roughly 60-180s): product shown working
       and proved, with no padding and no missing proof.
