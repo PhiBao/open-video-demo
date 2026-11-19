@@ -7,6 +7,8 @@ clips/*.webm + audio/*.mp3 + build/segments.json
   -> <output> (config/video.json) and a sidecar .srt
 """
 import argparse
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -26,33 +28,33 @@ def fallback_cues(text, dur):
     return cues
 
 
-def segment_total(seg, cfg):
-    """On-screen length of a segment.
+segment_total = lib.segment_total
 
-    Normally the narration length plus a small pad. A scene whose own beats
-    (clicks, waits for a slow app) outlast its narration is extended instead of
-    truncated - the recorder writes the real action time next to the clip.
-    """
-    total = round(seg["dur"] + cfg["pad"], 2)
-    side_file = lib.CLIPS / f"{seg['id']}.json"
-    side = lib.load_json(side_file) if side_file.exists() else {}
-    if side.get("action_time") is not None:
-        # action_time is measured from the start of the clip; the build cuts
-        # `trim` off the front, so compare what is left on screen.
-        content = float(side["action_time"]) - float(side.get("trim", cfg["trim"]))
-        total = round(max(total, content + 0.4), 2)
-    return total
+
+def _stamp(path):
+    st = Path(path).stat()
+    return f"{Path(path).name}:{st.st_size}:{st.st_mtime_ns}"
 
 
 def segment_part(seg, cfg, work=None):
     work = work or lib.WORK
     sid = seg["id"]
-    clip = lib.CLIPS / f"{sid}.webm"
+    side = lib.clip_sidecar(sid)
+    clip = lib.clip_path(sid, side)
     if not clip.exists():
         sys.exit(f"missing clip {clip} - run scripts/record.py first")
-    side = lib.load_json(lib.CLIPS / f"{sid}.json") if (lib.CLIPS / f"{sid}.json").exists() else {}
     trim = float(side.get("trim", cfg["trim"]))
     total = segment_total(seg, cfg)
+    out = work / f"{sid}.mp4"
+    # Re-encoding every segment on every build is the slow part of a small
+    # edit; skip a segment whose inputs and cut are unchanged.
+    key = hashlib.sha256(json.dumps([
+        _stamp(clip), _stamp(seg["audio"]), round(trim, 3), total,
+        cfg["width"], cfg["height"], cfg["fps"], cfg["preset"], cfg["crf"],
+    ]).encode()).hexdigest()[:16]
+    keyfile = work / f"{sid}.key"
+    if out.exists() and keyfile.exists() and keyfile.read_text().strip() == key:
+        return out, total, True
     w, h, fps = cfg["width"], cfg["height"], cfg["fps"]
     vf = (
         f"fps={fps},"
@@ -65,12 +67,12 @@ def segment_part(seg, cfg, work=None):
              "-vf", vf, "-t", f"{total:.2f}", "-an",
              "-c:v", "libx264", "-preset", cfg["preset"], "-crf", cfg["crf"],
              silent])
-    out = work / f"{sid}.mp4"
     lib.run(["ffmpeg", "-y", "-v", "error", "-i", silent, "-i", seg["audio"],
              "-filter_complex", "[1:a]apad[a]", "-map", "0:v", "-map", "[a]",
              "-t", f"{total:.2f}", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
              out])
-    return out, total
+    keyfile.write_text(key + "\n")
+    return out, total, False
 
 
 def build_subtitles(segments, cfg):
@@ -112,9 +114,12 @@ def main():
 
     parts = []
     for seg in segments:
-        part, total = segment_part(seg, cfg)
+        part, total, cached = segment_part(seg, cfg)
         parts.append(part)
-        print(f"  {seg['id']:<16} {total:6.2f}s", flush=True)
+        take = lib.clip_sidecar(seg["id"]).get("take")
+        print(f"  {seg['id']:<16} {total:6.2f}s"
+              f"{'  take ' + take if take else ''}{'  cached' if cached else ''}",
+              flush=True)
 
     joined = concat(parts, lib.WORK / "joined.mp4")
     n, total = build_subtitles(segments, cfg)

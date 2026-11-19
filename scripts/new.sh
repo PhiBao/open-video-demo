@@ -38,8 +38,9 @@ cat > "$dest/script/story.json" <<EOF
       "id": "s2_product",
       "text": "TODO: narrate what the viewer sees happening in the product, as if you were showing it to a friend who is not technical.",
       "scene": {
-        "_note": "placeholder app - replace src with your app URL or a local page; for a CLI/dev-tool product replace this whole scene with a 'term' scene (see AGENTS.md)",
+        "_note": "placeholder app - replace src with your app URL or a local page; for a CLI/dev-tool product replace this whole scene with a 'term' scene (see AGENTS.md). Later page segments with \"take\": \"app\" continue this same live page - do not reload and repeat clicks.",
         "kind": "page",
+        "take": "app",
         "src": "videos/example/app/index.html",
         "zoom": 1.5,
         "wait_for": ["text=Ship with confidence"],

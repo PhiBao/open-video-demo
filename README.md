@@ -34,10 +34,14 @@ you are inside the project folder or only one project exists.
 - **Audio is fingerprinted.** Edit a segment's text and only its narration
   regenerates; everything else is cached.
 - **Clips are fingerprinted.** Edit a scene - or the HTML page it shows - and
-  only that clip re-records.
+  only that clip re-records. Unchanged segments are not even re-encoded.
+- **Long takes, not replays.** Page segments that share a `take` run on one
+  live page and are cut into one continuous shot, so step three never has to
+  click through steps one and two again.
 - **Timing is automatic.** Each scene is recorded for exactly
   `lead-in + narration + slack`, then trimmed and freeze-padded to fit the
-  audio. You never hand-tune durations.
+  audio. Beats can be anchored to a sentence with `cue`. You never hand-tune
+  durations.
 - **Subtitles are free.** edge-tts emits real word timings; `build.py` shifts
   and burns them, and writes a sidecar `.srt` for uploads.
 

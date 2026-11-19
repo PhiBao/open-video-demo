@@ -158,33 +158,16 @@
             "action": "scrollTo",
             "sel": ".runs",
             "dur": 1.2,
-            "after": 0.5
-          },
-          {
-            "action": "click",
-            "sel": "#search",
-            "after": 0.3
-          },
-          {
-            "action": "type",
-            "sel": "#search",
-            "text": "deploy confidence",
-            "cps": 16,
-            "after": 0.5
+            "cue": 2
           },
           {
             "action": "scrollTo",
             "sel": ".activity",
             "dur": 1.1,
-            "after": 0.7
-          },
-          {
-            "action": "scrollTo",
-            "sel": ".cta",
-            "dur": 1.2,
-            "after": 1.1
+            "after": 0.5
           }
-        ]
+        ],
+        "take": "app"
       }
     },
     {
@@ -192,30 +175,13 @@
       "text": "You decide where it looks and when. Point it at a section, wait for the page to load, type in the search box, press the button. If something is missing, the run tells you instead of quietly filming an empty screen. What ends up in the video is the actual page, at full size, doing the work.",
       "scene": {
         "kind": "page",
-        "src": "app/index.html",
-        "zoom": 1.5,
-        "wait_for": [
-          "text=Ship with confidence"
-        ],
+        "take": "app",
         "actions": [
-          {
-            "action": "scrollTo",
-            "sel": ".activity",
-            "dur": 1.2,
-            "after": 0.6
-          },
-          {
-            "action": "move",
-            "x": 0.3,
-            "y": 0.4,
-            "dur": 0.7,
-            "after": 0.5
-          },
           {
             "action": "scrollTo",
             "y": 0.0,
             "dur": 1.0,
-            "after": 0.4
+            "cue": 2
           },
           {
             "action": "click",
@@ -226,14 +192,19 @@
             "action": "type",
             "sel": "#search",
             "text": "rollback safety",
-            "cps": 16,
-            "after": 0.6
+            "cps": 16
+          },
+          {
+            "action": "scrollTo",
+            "sel": ".runs",
+            "dur": 1.1,
+            "cue": 3
           },
           {
             "action": "scrollTo",
             "sel": ".cta",
             "dur": 1.2,
-            "after": 1.0
+            "cue": 4
           }
         ]
       }

@@ -50,6 +50,8 @@ does the same via environment.
   an API/agent with real request -> response behavior.
 - Web app: start it (or use `file://`). Note stable selectors for the page
   scene (`.stats`, `#search`, `text=...`) and walk the flows the demo needs.
+  Plan one `take` per flow, so later segments continue the same live page
+  instead of reloading it and repeating the clicks.
 - CLI/API: collect **verbatim** material by running the real commands and
   copying the real output (abbreviate long hashes with `...`).
 
@@ -228,11 +230,69 @@ Templates: template `assets/cards/title.html`, `close.html`, overridable with
 - `zoom` scales small apps up for legibility (1.5-1.7 typical).
 - Actions: `move` (x/y are 0-1 viewport fractions), `scrollTo` (`sel` or
   `y` fraction; `at` = where on screen the element lands), `click`, `hover`,
-  `type`, `press`, `wait`, `zoom`. `after` = pause after the action;
-  `dur` = animation length.
+  `type`, `press`, `select`, `wait`, `zoom`, `flow`. `after` = pause after
+  the action; `dur` = animation length; `wait_for` = selectors to wait for
+  after the action (use it instead of guessing a long `after`).
+- `type` and `press` use the real keyboard (trusted key events). `type`
+  clears the field first (`"clear": false` to append); `"js": true` falls
+  back to setting the value from script.
+- `"cue": N` on any action waits until sentence N of this segment's narration
+  starts (`audio/<id>.srt`, one subtitle line per sentence; `cue_offset`
+  shifts it in seconds). Use it to land the click on the words that describe
+  it. The recorder warns when an action starts more than 0.75s after its cue.
+- `setup`: actions that run **off camera** before the segment starts (a
+  reset, a pre-filled form that the narration does not talk about).
 - Keep the action timeline shorter than the narration; the recorder measures
-  its own lead-in automatically.
+  its own lead-in automatically and holds the page live until the narration
+  ends. **Do not end a scene with a long `wait`** to fill time - the scene
+  already lasts as long as its voice, and a trailing wait only adds silence.
 - Selector misses are printed as warnings - always check them.
+
+### Takes - one live page across several segments
+
+Every page segment without a `take` opens a fresh browser and loads `src`
+again: typed text, results and scroll position are gone. **Never replay a
+previous scene's clicks to get back to where it ended** - the viewer sees the
+same form filled three times, and the app does the work again (a second
+quote, a second payment). Give those segments the same `take` instead:
+
+```json
+{"id":"s3_form", "scene":{"kind":"page","take":"app","src":"http://localhost:3000",
+  "wait_for":["text=Plan an exit"],
+  "actions":[{"action":"type","sel":"#qty","text":"75","cps":12},
+             {"action":"click","sel":"text=Get routes","cue":2,"wait_for":[".routes"]}]}},
+{"id":"s4_card", "scene":{"kind":"card","template":"title-left"}},
+{"id":"s5_results", "scene":{"kind":"page","take":"app",
+  "actions":[{"action":"scrollTo","sel":".routes","cue":1}]}}
+```
+
+- The first segment of a take opens the page (`src`, `wait_for`, `settle`,
+  `storage_state`, `wallet`). Later segments omit `src` and continue exactly
+  where the previous one stopped; their `wait_for` happens on camera.
+- Segments of a take are recorded back to back as one video
+  (`clips/take-<name>.webm`) and cut at the narration boundaries. Adjacent
+  segments play as one continuous shot; cards or terminals may sit between
+  them in the story and the page comes back in the state it was left in.
+- Default: **one take per product flow**. Start a new take only when the demo
+  really changes context (a different app, a different user).
+- `--only <id>` on any segment re-records its whole take (later segments
+  depend on earlier ones).
+- QA warns when a scene reloads the page and repeats an earlier scene's
+  clicks, and when a segment runs more than 1.5s past its narration.
+
+### Flows - write a repeated sequence once
+
+```json
+{"flows": {"sign_in": [
+   {"action":"type","sel":"#email","text":"demo@acme.dev","cps":20},
+   {"action":"click","sel":"text=Continue","wait_for":["text=Dashboard"]}]},
+ "segments": [... {"action":"flow","name":"sign_in","after":0.5} ...]}
+```
+
+A `flow` reference expands in place (in `actions` or `setup`); extra keys
+such as `after` apply to its last action. Prefer a take over a flow when the
+point is to keep state; use a flow inside `setup` when a scene really needs
+a fresh page in a known state.
 
 ### Crypto demos - injected wallet first, extension second
 
@@ -330,11 +390,14 @@ Approve wallet prompts with recorder actions, not by hand:
 
 ## Timing model (why things fit)
 
-`tts.py` measures each narration; `record.py` records `trim + dur + slack`;
-`build.py` trims the lead-in, pads/freezes to exactly `dur + pad`, muxes audio,
+`tts.py` measures each narration; `record.py` records `trim + dur + slack`
+(page segments note their own start/end on the clip clock, and a take holds
+each segment for its narration before the next one begins);
+`build.py` cuts each segment from its clip, pads/freezes to exactly
+`dur + pad` (longer only when the beats need it), muxes audio,
 concats, burns subtitles from edge-tts word timings, normalizes to -16 LUFS.
-To change timing, change the **text** or move line `at` values - never edit
-generated files.
+To change timing, change the **text**, move line `at` values, or anchor page
+beats with `cue` - never edit generated files.
 
 ## Common failures
 
@@ -344,6 +407,10 @@ generated files.
 | `chromium` missing | `./scripts/setup.sh` |
 | `selector ... not found` | check the real DOM; add as `wait_for`; app not loaded |
 | `clip ... < needed` QA warning | scene/actions ran past narration; shorten `after`/`dur` or lengthen text |
+| `on screen ... longer than its narration` | silent screen time: drop trailing `wait`s, use `wait_for` instead of long `after`, or move setup into a take |
+| `reloads the page and repeats ...` | the scene replays an earlier scene's steps; give both the same `take` |
+| `... starts Xs after sentence N` | beats before that `cue` take too long; tighten them or cue a later sentence |
+| same click/form shown in several scenes | use one `take` for the flow (see Takes) |
 | unresolved card placeholders | add the key to `branding` or scene `vars` |
 | subtitles wrap past 2 lines | shorten the sentence in `text` |
 | video too thin / dragging | thin: add a proof / deeper product pass (never pad); dragging: cut a segment; keep hook/product/proof/close |

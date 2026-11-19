@@ -174,7 +174,107 @@ def load_story():
         if s["id"] in seen:
             sys.exit(f"{STORY}: duplicate segment id {s['id']!r}")
         seen.add(s["id"])
+    flows = story.get("flows") or {}
+    for s in segs:
+        scene = s.get("scene") or {}
+        for key in ("setup", "actions"):
+            if key in scene:
+                scene[key] = expand_flows(scene[key], flows, f"{s['id']}.{key}")
+    check_takes(segs)
     return story
+
+
+def expand_flows(actions, flows, where, depth=0):
+    """Inline {"action": "flow", "name": "x"} with story["flows"]["x"].
+
+    A flow is a named list of actions written once and reused by any scene,
+    so a sign-in or a form fill is not copy-pasted (and drifting) per scene.
+    Keys on the reference other than action/name (e.g. "after") are applied
+    to the last expanded action.
+    """
+    if depth > 8:
+        sys.exit(f"{STORY}: flows nest too deep at {where} (a flow uses itself?)")
+    out = []
+    for a in actions or []:
+        if a.get("action") != "flow":
+            out.append(a)
+            continue
+        name = a.get("name") or a.get("flow")
+        if name not in flows:
+            sys.exit(f"{STORY}: {where} uses unknown flow {name!r} "
+                     f"(known: {', '.join(flows) or 'none'})")
+        body = [dict(x) for x in expand_flows(flows[name], flows,
+                                               f"{where}>{name}", depth + 1)]
+        extra = {k: v for k, v in a.items() if k not in ("action", "name", "flow")}
+        if body and extra:
+            body[-1].update(extra)
+        out += body
+    return out
+
+
+def check_takes(segs):
+    """A take is one live page shared by several page segments.
+
+    Only the first segment of a take opens the page (src, wait_for before
+    recording, storage_state, wallet); later segments continue where the
+    previous one left off.
+    """
+    first = {}
+    for s in segs:
+        scene = s.get("scene") or {}
+        take = scene.get("take")
+        if not take:
+            continue
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", str(take)):
+            sys.exit(f"{STORY}: {s['id']} take {take!r} must be a slug")
+        if scene.get("kind") != "page":
+            sys.exit(f"{STORY}: {s['id']} has a take but is a "
+                     f"{scene.get('kind')!r} scene; only page scenes share takes")
+        if take not in first:
+            if not scene.get("src"):
+                sys.exit(f"{STORY}: {s['id']} opens take {take!r} and needs a src")
+            first[take] = s
+            continue
+        head = first[take]["scene"]
+        if scene.get("src") and scene["src"] != head["src"]:
+            sys.exit(f"{STORY}: {s['id']} continues take {take!r} but sets a "
+                     f"different src; navigate with a click, or start a new take")
+        for key in ("storage_state", "wallet", "chain", "crypto"):
+            if key in scene and scene[key] != head.get(key):
+                sys.exit(f"{STORY}: {s['id']} sets {key!r}, which only the first "
+                         f"segment of take {take!r} ({first[take]['id']}) controls")
+
+
+def clip_sidecar(sid):
+    path = CLIPS / f"{sid}.json"
+    return load_json(path) if path.exists() else {}
+
+
+def clip_path(sid, side=None):
+    """The video file a segment is cut from (its own, or its take's)."""
+    side = clip_sidecar(sid) if side is None else side
+    return CLIPS / (side.get("clip") or f"{sid}.webm")
+
+
+def segment_total(seg, cfg):
+    """On-screen length of a segment.
+
+    Normally the narration length plus a small pad. A page segment records its
+    own start and end on the clip clock; the end is never earlier than the
+    narration, but a scene whose beats outlast the narration runs longer
+    instead of being cut off. Segments of one take are cut back to back, so
+    they play as one continuous shot.
+    """
+    total = round(seg["dur"] + cfg["pad"], 2)
+    side = clip_sidecar(seg["id"])
+    if side.get("end") is not None:
+        return round(max(total, float(side["end"]) - float(side["trim"])), 2)
+    if side.get("action_time") is not None:
+        # Older recordings: action_time is measured from the clip start and
+        # the build cuts `trim` off the front.
+        content = float(side["action_time"]) - float(side.get("trim", cfg["trim"]))
+        total = round(max(total, content + 0.4), 2)
+    return total
 
 
 def load_segments():
